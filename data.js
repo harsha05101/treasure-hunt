@@ -1,41 +1,41 @@
 module.exports = [
-  { q: "Where time is respected but no one waits?",
-    answer: "CLOCK",
-    clues: ["I ring", "I have hands", "Everyone checks me"] },
+  { q: "Where time?",
+    answer: "CLOC",
+    clues: ["I rig", "I hae hands", "Everyone checks me"] },
 
-  { q: "I feed many but eat nothing",
+  { q: "I feed ",
     answer: "FOOD",
     clues: ["Smell", "Plates", "Students love me"] },
 
-  { q: "Silence is louder here",
+  { q: "Silence ",
     answer: "BOOK",
-    clues: ["Shelves", "Study", "Knowledge"] },
+    clues: ["Shelvs", "Study", "Knowledge"] },
 
-  { q: "Sweat and cheers mix here",
+  { q: "Sweat ",
     answer: "PLAY",
-    clues: ["Running", "Games", "Sports"] },
+    clues: ["Running", "Games", "Spots"] },
 
-  { q: "Cars sleep safely here",
+  { q: "Cars ",
     answer: "PARK",
-    clues: ["Vehicles", "Security", "Parking"] },
+    clues: ["Vehicles", "Secity", "Parking"] },
 
-  { q: "Where flags rise with pride",
-    answer: "FLAG",
+  { q: "Where ",
+    answer: "FLG",
     clues: ["Ceremony", "Morning", "Nation"] },
 
-  { q: "Steps that lead everywhere",
+  { q: "Steps ",
     answer: "STEP",
     clues: ["Climb", "Floors", "No lift"] },
 
-  { q: "I watch you but have no eyes",
+  { q: "I watch ",
     answer: "WATCH",
     clues: ["Security", "Mounted", "Camera"] },
 
-  { q: "Victory waits where paths end",
+  { q: "Victory ",
     answer: "FINAL",
     clues: ["End", "Winner", "Finish"] },
 
-  { q: "Place of glory",
+  { q: "Place ",
     answer: "WIN",
-    clues: ["Prize", "Celebrate", "Success"] }
+    clues: ["Prze", "Celebrate", "Success"] }
 ];
