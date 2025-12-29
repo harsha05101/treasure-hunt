@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Treasure Hunt</title>
+</head>
+<body>
+
+<h2>Treasure Hunt</h2>
+
+<input id="name" type="text" placeholder="Team Name">
+<button type="button" onclick="start()">Start Game</button>
+
+<p id="msg"></p>
+
+<script>
+console.log("Index page loaded");
+
+function start() {
+  console.log("Start button clicked");
+
+  const team = document.getElementById("name").value.trim();
+  const msg = document.getElementById("msg");
+
+  if (!team) {
+    msg.innerText = "Enter team name";
+    console.log("No team name");
+    return;
+  }
+
+  console.log("Sending register request", team);
+
+  fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: team })
+  })
+  .then(res => {
+    console.log("Register response status:", res.status);
+    return res.json();
+  })
+  .then(data => {
+    console.log("Register success:", data);
+    localStorage.setItem("id", data.id);
+    localStorage.setItem("qIndex", 0);
+    window.location.href = "/game.html";
+  })
+  .catch(err => {
+    console.error("Register error:", err);
+    msg.innerText = "Error – check console";
+  });
+}
+</script>
+
+</body>
+</html>

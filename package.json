@@ -1,0 +1,13 @@
+{
+  "name": "treasure-hunt",
+  "version": "1.0.0",
+  "description": "Treasure Hunt Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "body-parser": "^1.20.2"
+  }
+}
