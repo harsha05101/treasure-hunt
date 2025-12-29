@@ -1,53 +1,37 @@
-let id = Number(localStorage.getItem("id"));
-let qIndex = Number(localStorage.getItem("qIndex"));
+const id = localStorage.getItem("id");
+let qIndex = Number(localStorage.getItem("qIndex")) || 0;
 
-// 🚨 SAFETY CHECK
-if (!id) {
-  alert("Please start the game from the registration page.");
-  window.location.href = "index.html";
-}
-
-function loadQuestion() {
+function load() {
   fetch(`/question/${qIndex}`)
-    .then(res => res.json())
-    .then(data => {
-      if (!data.q) return;
-      status.innerText = `Question ${qIndex + 1}`;
-      question.innerText = data.q;
-      clues.innerHTML = "";
-      data.clues.forEach(c => {
-        const li = document.createElement("li");
-        li.innerText = c;
-        clues.appendChild(li);
-      });
+    .then(r => r.json())
+    .then(d => {
+      if (!d.q) {
+        msg.innerText = "🏁 Finished! Return to base.";
+        return;
+      }
+      qno.innerText = `Question ${qIndex + 1}`;
+      q.innerText = d.q;
+      clues.innerText = "Clues: " + (d.clues || []).join(", ");
     });
 }
 
-function submitWord() {
+function submit() {
   fetch("/submit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, word: word.value })
   })
-  .then(res => res.json())
-  .then(result => {
-    if (!result.ok) {
-      msg.innerText = "❌ Wrong word";
-      return;
-    }
-
-    msg.innerText = "✅ Correct!";
-    qIndex = result.next;
-    localStorage.setItem("qIndex", qIndex);
-    word.value = "";
-
-    if (qIndex >= 10) {
-      location.href = "leaderboard.html";
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      qIndex++;
+      localStorage.setItem("qIndex", qIndex);
+      word.value = "";
+      load();
     } else {
-      loadQuestion();
+      msg.innerText = "Wrong answer!";
     }
   });
 }
 
-loadQuestion();
-setInterval(loadQuestion, 3000);
+load();

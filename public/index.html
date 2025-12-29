@@ -1,55 +1,30 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Treasure Hunt</title>
-</head>
-<body>
+<link rel="stylesheet" href="style.css">
 
-<h2>Treasure Hunt</h2>
+<div class="card">
+  <h1>Shree Krishna Heights</h1>
+  <h2>Treasure Hunt</h2>
 
-<input id="name" type="text" placeholder="Team Name">
-<button type="button" onclick="start()">Start Game</button>
+  <input id="name" placeholder="Enter Team Name">
+  <button onclick="start()">Start Game</button>
 
-<p id="msg"></p>
+  <p id="msg"></p>
+</div>
 
 <script>
-console.log("Index page loaded");
-
 function start() {
-  console.log("Start button clicked");
-
-  const team = document.getElementById("name").value.trim();
-  const msg = document.getElementById("msg");
-
-  if (!team) {
-    msg.innerText = "Enter team name";
-    console.log("No team name");
-    return;
-  }
-
-  console.log("Sending register request", team);
+  const name = document.getElementById("name").value.trim();
+  if (!name) return;
 
   fetch("/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: team })
+    body: JSON.stringify({ name })
   })
-  .then(res => {
-    console.log("Register response status:", res.status);
-    return res.json();
-  })
-  .then(data => {
-    console.log("Register success:", data);
-    localStorage.setItem("id", data.id);
+  .then(r => r.json())
+  .then(p => {
+    localStorage.setItem("id", p.id);
     localStorage.setItem("qIndex", 0);
-    window.location.href = "/game.html";
-  })
-  .catch(err => {
-    console.error("Register error:", err);
-    msg.innerText = "Error – check console";
+    location.href = "game.html";
   });
 }
 </script>
-
-</body>
-</html>

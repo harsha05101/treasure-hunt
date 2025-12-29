@@ -1,9 +1,20 @@
-<h2>ADMIN PANEL</h2>
+<link rel="stylesheet" href="style.css">
 
-<input id="qIndex" type="number" min="0" max="9" placeholder="Question Index">
-<button onclick="reveal()">Reveal Next Clue</button>
-<button onclick="exportCSV()">Export Results</button>
+<div class="card">
+  <h1>Shree Krishna Heights</h1>
+  <h2>Treasure Hunt – Admin Panel</h2>
 
-<table border="1" id="t"></table>
+  <button class="admin-btn" onclick="setState('BREAK')">BREAK</button>
+  <button class="admin-btn" onclick="setState('PLAYING')">RESUME</button>
+  <button class="admin-btn" onclick="setState('FINISHED')">FINISH</button>
+
+  <input id="qIndex" type="number" placeholder="Question Index">
+  <button onclick="reveal()">Reveal Next Clue</button>
+  <button onclick="exportCSV()">Export Results</button>
+
+  <div class="table-wrap">
+    <table id="t"></table>
+  </div>
+</div>
 
 <script src="js/admin.js"></script>
