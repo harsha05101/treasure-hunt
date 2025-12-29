@@ -8,12 +8,18 @@
   <button class="admin-btn" onclick="setState('PLAYING')">RESUME</button>
   <button class="admin-btn" onclick="setState('FINISHED')">FINISH</button>
 
-  <input id="qIndex" type="number" placeholder="Question Index">
+  <input id="qIndex" type="number" placeholder="Question Index (0-based)">
   <button onclick="reveal()">Reveal Next Clue</button>
   <button onclick="exportCSV()">Export Results</button>
 
   <div class="table-wrap">
-    <table id="t"></table>
+    <table id="t">
+      <tr>
+        <th>Team</th>
+        <th>Current Question</th>
+        <th>Status</th>
+      </tr>
+    </table>
   </div>
 </div>
 
