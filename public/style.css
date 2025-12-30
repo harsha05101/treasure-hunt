@@ -4,8 +4,8 @@ body {
     margin: 0;
     min-height: 100vh;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    /* Use relative path for web */
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("C:\Users\saiha\OneDrive\Desktop\image.jpeg");
+    /* FIXED: Relative path for web deployment */
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("/image.jpeg");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -20,13 +20,13 @@ body {
     padding: 30px;
     border-radius: 20px;
     width: 95%;
-    max-width: 450px; /* Mobile View default */
+    max-width: 450px; /* Standard Mobile view */
     text-align: center;
     box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Desktop View for Admin/Leaderboard */
+/* Wide view for Admin and Leaderboard */
 .admin-wide {
     max-width: 900px;
 }
@@ -62,7 +62,6 @@ button {
 button:hover { background: #e68a00; }
 button:active { transform: scale(0.98); }
 
-/* Table Styling */
 .table-container {
     margin-top: 25px;
     overflow-x: auto;
@@ -71,7 +70,7 @@ button:active { transform: scale(0.98); }
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 16px; /* Bigger text */
+    font-size: 16px;
 }
 
 th, td {
