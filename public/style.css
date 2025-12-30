@@ -1,14 +1,10 @@
 * { box-sizing: border-box; }
-
 body {
     margin: 0;
     min-height: 100vh;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    /* FIXED: Relative path for web deployment */
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("/image.jpeg");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    /* Changed background to a solid color or simple gradient */
+    background: #1a1a1a; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,14 +13,29 @@ body {
 
 .card {
     background: rgba(0, 0, 0, 0.85);
-    padding: 30px;
+    /* Remove top padding to let the image touch the top edges */
+    padding: 0 30px 30px 30px; 
     border-radius: 20px;
     width: 95%;
-    max-width: 450px; /* Standard Mobile view */
+    max-width: 450px;
     text-align: center;
     box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden; /* This clips the image corners to match the card */
 }
+
+/* New CSS for the top image */
+.top-image {
+    width: calc(100% + 60px); /* Expands to cover the card padding */
+    margin-left: -30px;       /* Centers it back after expansion */
+    margin-top: 0;
+    margin-bottom: 20px;
+    height: auto;
+    max-height: 200px;        /* Adjust this to change how tall the image is */
+    object-fit: cover;        /* Ensures the image doesn't look stretched */
+    display: block;
+}
+
 
 /* Wide view for Admin and Leaderboard */
 .admin-wide {
