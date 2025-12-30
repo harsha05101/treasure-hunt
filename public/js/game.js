@@ -8,38 +8,42 @@ const clueSound = new Audio("/sounds/clue.mp3");
 function poll() {
     fetch("/state").then(r => r.json()).then(s => {
         const area = document.getElementById("gameArea");
-        const msg = document.getElementById("msg");
+        const msgBox = document.getElementById("msg");
 
-        // 1. Handle Hard Reset (Redirect to start if gameVersion changes)
-        if (s.gameVersion !== lastGameVersion && lastGameVersion !== -1) {
+        // 1. Handle HARD RESET Only (Only if version changes)
+        if (lastGameVersion !== -1 && s.gameVersion !== lastGameVersion) {
             localStorage.clear();
             location.href = "index.html";
             return;
         }
         lastGameVersion = s.gameVersion;
 
-        // 2. Handle Break State
+        // 2. Handle BREAK STATE
         if (s.state === "BREAK") {
             area.style.display = "none";
-            msg.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
+            msgBox.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
+            msgBox.style.display = "block";
             return;
         }
 
-        // 3. Handle Finish State
+        // 3. Handle FINISH STATE
         if (s.state === "FINISHED") {
             area.style.display = "none";
-            msg.innerText = "🏆 CHAMPIONS! YOU FINISHED!";
+            msgBox.innerText = "🏆 CHAMPIONS! YOU FINISHED!";
+            msgBox.style.display = "block";
             return;
         }
 
-        // 4. Playing State
+        // 4. PLAYING STATE
         area.style.display = "block";
-        msg.innerText = "";
+        msgBox.innerText = "";
 
-        // Check for new clues
+        // Auto-refresh clues
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
-            if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) clueSound.play();
+            if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) {
+                clueSound.play();
+            }
             lastClueVersion = currentClueVer;
             loadQuestion();
         }
@@ -52,7 +56,7 @@ function loadQuestion() {
             document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
             document.getElementById("qText").innerText = d.q;
             
-            // Update Bulbs and Clue Text
+            // Light up bulbs
             for (let i = 0; i < 3; i++) {
                 const bulb = document.getElementById(`bulb${i}`);
                 if (d.clues && d.clues[i]) {
@@ -89,7 +93,6 @@ function submitAnswer() {
     });
 }
 
-// Start polling
 setInterval(poll, 2500);
 loadQuestion();
 poll();

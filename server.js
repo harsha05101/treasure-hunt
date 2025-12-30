@@ -20,7 +20,6 @@ app.get("/state", (req, res) => {
 app.post("/state", (req, res) => {
     const newState = req.body.state;
     
-    // Logic to freeze/unfreeze time without deleting data
     if (newState === "BREAK" && gameState !== "BREAK") {
         breakStartTime = Date.now(); 
     } else if (newState === "PLAYING" && gameState === "BREAK") {
@@ -34,17 +33,18 @@ app.post("/state", (req, res) => {
     }
     
     gameState = newState;
-    gameVersion++; // This signals clients to check for state changes
+    // NOTE: We DO NOT increment gameVersion here. 
+    // Incrementing gameVersion tells clients the game was RESTARTED (Wiped).
     res.sendStatus(200);
 });
 
-// HARD RESET - Only call this when you want to wipe everything
+// HARD RESET - Use this only to wipe all players
 app.post("/restart", (req, res) => {
     players = [];
     clueCount = {};
     clueVersion = {};
     gameState = "PLAYING";
-    gameVersion++; // Forces clients to redirect to index.html
+    gameVersion++; // This signals a wipe, forcing players to index.html
     breakStartTime = null;
     res.sendStatus(200);
 });
@@ -101,7 +101,6 @@ app.post("/reveal", (req, res) => {
 });
 
 app.get("/players", (req, res) => res.json(players));
-
 app.get("/admin/status", (req, res) => {
     res.json({ gameState, clueCount, totalQuestions: questions.length });
 });
