@@ -7,7 +7,10 @@ const clueSound = new Audio("/sounds/clue.mp3");
 
 function poll() {
     fetch("/state").then(r => r.json()).then(s => {
-        // Handle Global Reset
+        const area = document.getElementById("gameArea");
+        const msg = document.getElementById("msg");
+
+        // 1. Handle Hard Reset (Redirect to start if gameVersion changes)
         if (s.gameVersion !== lastGameVersion && lastGameVersion !== -1) {
             localStorage.clear();
             location.href = "index.html";
@@ -15,25 +18,25 @@ function poll() {
         }
         lastGameVersion = s.gameVersion;
 
-        const msgBox = document.getElementById("msg");
-        const area = document.getElementById("gameArea");
-
+        // 2. Handle Break State
         if (s.state === "BREAK") {
             area.style.display = "none";
-            msgBox.innerText = "⏸ BREAK TIME - HEAD TO BASE";
+            msg.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
             return;
         }
 
+        // 3. Handle Finish State
         if (s.state === "FINISHED") {
             area.style.display = "none";
-            msgBox.innerText = "🏆 CHAMPIONS! YOU FINISHED!";
+            msg.innerText = "🏆 CHAMPIONS! YOU FINISHED!";
             return;
         }
 
+        // 4. Playing State
         area.style.display = "block";
-        msgBox.innerText = "";
+        msg.innerText = "";
 
-        // AUTO-REFRESH CLUES: If clue version changes, reload question immediately
+        // Check for new clues
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) clueSound.play();
@@ -49,18 +52,17 @@ function loadQuestion() {
             document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
             document.getElementById("qText").innerText = d.q;
             
-            // Reset and Update Bulbs
+            // Update Bulbs and Clue Text
             for (let i = 0; i < 3; i++) {
                 const bulb = document.getElementById(`bulb${i}`);
                 if (d.clues && d.clues[i]) {
-                    bulb.style.opacity = "1"; // Light up
+                    bulb.style.opacity = "1";
                     bulb.style.textShadow = "0 0 10px #ffeb3b";
                 } else {
-                    bulb.style.opacity = "0.2"; // Dim
+                    bulb.style.opacity = "0.2";
                     bulb.style.textShadow = "none";
                 }
             }
-            
             document.getElementById("clueText").innerText = d.clues.length ? d.clues.join(" | ") : "";
         }
     });
@@ -79,7 +81,7 @@ function submitAnswer() {
             qIndex++;
             localStorage.setItem("qIndex", qIndex);
             document.getElementById("answerInput").value = "";
-            lastClueVersion = -1; // Reset to force new clue fetch for next Q
+            lastClueVersion = -1; 
             loadQuestion();
         } else {
             alert("❌ Incorrect. Try again!");
@@ -87,6 +89,7 @@ function submitAnswer() {
     });
 }
 
-setInterval(poll, 2500); // Fast polling for clues
+// Start polling
+setInterval(poll, 2500);
 loadQuestion();
 poll();

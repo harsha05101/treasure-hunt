@@ -10,7 +10,7 @@ let clueCount = {};
 let gameState = "PLAYING";
 let gameVersion = 0;
 let clueVersion = {}; 
-let breakStartTime = null; // Tracks when a break begins
+let breakStartTime = null; 
 
 // ---------- STATE MANAGEMENT ----------
 app.get("/state", (req, res) => {
@@ -20,13 +20,12 @@ app.get("/state", (req, res) => {
 app.post("/state", (req, res) => {
     const newState = req.body.state;
     
-    // Logic to freeze/unfreeze time
+    // Logic to freeze/unfreeze time without deleting data
     if (newState === "BREAK" && gameState !== "BREAK") {
-        breakStartTime = Date.now(); // Record break start
+        breakStartTime = Date.now(); 
     } else if (newState === "PLAYING" && gameState === "BREAK") {
         if (breakStartTime) {
             const breakDuration = Date.now() - breakStartTime;
-            // Shift active players' start times forward by the break duration
             players.forEach(p => {
                 if (!p.end) p.lastTime += breakDuration;
             });
@@ -35,16 +34,17 @@ app.post("/state", (req, res) => {
     }
     
     gameState = newState;
-    gameVersion++;
+    gameVersion++; // This signals clients to check for state changes
     res.sendStatus(200);
 });
 
+// HARD RESET - Only call this when you want to wipe everything
 app.post("/restart", (req, res) => {
     players = [];
     clueCount = {};
     clueVersion = {};
     gameState = "PLAYING";
-    gameVersion++;
+    gameVersion++; // Forces clients to redirect to index.html
     breakStartTime = null;
     res.sendStatus(200);
 });
@@ -79,7 +79,6 @@ app.get("/question/:i", (req, res) => {
 app.post("/submit", (req, res) => {
     const { id, word } = req.body;
     const p = players.find(x => x.id === id);
-    // Lock submission if not in PLAYING state
     if (!p || gameState !== "PLAYING" || p.end) return res.json({ ok: false });
 
     if (word.trim().toUpperCase() === questions[p.qIndex].answer.toUpperCase()) {
