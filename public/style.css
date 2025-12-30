@@ -5,7 +5,7 @@ body {
     min-height: 100vh;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     /* Use relative path for web */
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("/image.jpeg");
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("C:\Users\saiha\OneDrive\Desktop\image.jpeg");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
