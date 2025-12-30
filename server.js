@@ -104,15 +104,51 @@ app.get("/players", (req, res) => res.json(players));
 app.get("/admin/status", (req, res) => {
     res.json({ gameState, clueCount, totalQuestions: questions.length });
 });
+// Helper function to convert seconds to mm:ss format
+function formatTime(seconds) {
+    if (!seconds && seconds !== 0) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
 
 app.get("/export", (req, res) => {
-    const ranked = [...players].sort((a, b) => (a.end || Infinity) - (b.end || Infinity));
-    let csv = "Rank,Team,Total_Time(s),Status\n";
-    ranked.forEach((p, i) => {
-        const total = p.times.reduce((a, b) => a + b, 0);
-        csv += `${i + 1},${p.name},${total},${p.end ? "Finished" : "Playing"}\n`;
+    // 1. Calculate totals and Sort by fastest total time to determine "Place"
+    const ranked = [...players].map(p => {
+        const totalSeconds = p.times.reduce((a, b) => a + b, 0);
+        return { ...p, totalSeconds };
+    }).sort((a, b) => {
+        // Teams that finished go first, then sorted by fastest time
+        if (a.end && !b.end) return -1;
+        if (!a.end && b.end) return 1;
+        return a.totalSeconds - b.totalSeconds;
     });
+
+    // 2. Build CSV Header
+    let csv = "Place,Team Name";
+    for (let i = 1; i <= questions.length; i++) {
+        csv += `,Question ${i} (mm:ss)`;
+    }
+    csv += ",Total Time (mm:ss),Status\n";
+
+    // 3. Build CSV Rows
+    ranked.forEach((p, index) => {
+        // Place is the index + 1
+        let row = `${index + 1},${p.name}`;
+        
+        // Individual Question Times
+        for (let j = 0; j < questions.length; j++) {
+            row += `,${p.times[j] ? formatTime(p.times[j]) : "N/A"}`;
+        }
+        
+        // Total Time and Status
+        row += `,${formatTime(p.totalSeconds)},${p.end ? "Finished" : "Playing"}\n`;
+        csv += row;
+    });
+
+    // 4. Send File
     res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=treasure_hunt_results.csv");
     res.send(csv);
 });
 
