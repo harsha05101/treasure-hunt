@@ -27,6 +27,27 @@ app.post("/register", (req, res) => {
   players.push(player);
   res.json(player);
 });
+// Add these variables to the top of server.js
+let breakStartTime = null;
+
+app.post("/state", (req, res) => {
+    const newState = req.body.state;
+    
+    if (newState === "BREAK" && gameState !== "BREAK") {
+        breakStartTime = Date.now(); // Record when break started
+    } else if (newState === "PLAYING" && gameState === "BREAK") {
+        const breakDuration = Date.now() - breakStartTime;
+        // Shift every active player's 'lastTime' forward by the break duration
+        players.forEach(p => {
+            if (!p.end) p.lastTime += breakDuration;
+        });
+        breakStartTime = null;
+    }
+    
+    gameState = newState;
+    gameVersion++;
+    res.sendStatus(200);
+});
 
 // STATE POLLING
 app.get("/state", (req, res) => {

@@ -14,14 +14,21 @@
         <h2 id="qno">Question 1</h2>
         <p id="msg" style="font-weight: bold; font-size: 1.2em;"></p>
 
-        <div id="gameArea">
-            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                <p id="qText" style="font-size: 18px; line-height: 1.5;"></p>
-            </div>
-            <p id="clueText" style="color: #4caf50; min-height: 20px; font-weight: bold;"></p>
-            <input id="answerInput" placeholder="ENTER ANSWER" style="text-transform: uppercase;">
-            <button onclick="submitAnswer()">SUBMIT ANSWER</button>
-        </div>
+<div id="gameArea">
+    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+        <p id="qText" style="font-size: 18px; line-height: 1.5;"></p>
+    </div>
+    
+    <div id="bulbContainer" style="font-size: 24px; margin-bottom: 10px;">
+        <span id="bulb0" style="opacity: 0.2;">💡</span>
+        <span id="bulb1" style="opacity: 0.2;">💡</span>
+        <span id="bulb2" style="opacity: 0.2;">💡</span>
+    </div>
+    <p id="clueText" style="color: #4caf50; font-weight: bold; min-height: 20px;"></p>
+    
+    <input id="answerInput" placeholder="ENTER ANSWER" style="text-transform: uppercase;">
+    <button onclick="submitAnswer()">SUBMIT ANSWER</button>
+</div>
     </div>
     <script src="js/game.js"></script>
 </body>

@@ -48,7 +48,20 @@ function loadQuestion() {
         if (d.q) {
             document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
             document.getElementById("qText").innerText = d.q;
-            document.getElementById("clueText").innerText = d.clues.length ? "💡 " + d.clues.join(" | ") : "";
+            
+            // Reset and Update Bulbs
+            for (let i = 0; i < 3; i++) {
+                const bulb = document.getElementById(`bulb${i}`);
+                if (d.clues && d.clues[i]) {
+                    bulb.style.opacity = "1"; // Light up
+                    bulb.style.textShadow = "0 0 10px #ffeb3b";
+                } else {
+                    bulb.style.opacity = "0.2"; // Dim
+                    bulb.style.textShadow = "none";
+                }
+            }
+            
+            document.getElementById("clueText").innerText = d.clues.length ? d.clues.join(" | ") : "";
         }
     });
 }
