@@ -66,34 +66,27 @@
         }
 
         function updateAdmin() {
-    // ... your existing code for statusDisplay and playerTable ...
+            fetch("/admin/status").then(r=>r.json()).then(s => {
+                document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
+            });
 
-    fetch("/admin/status").then(r => r.json()).then(s => {
-        document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
-        
-        // Populate the Question/Clue Table
-        const clueTable = document.getElementById("clueStatusTable");
-        let clueHtml = "";
-        
-        // Loop through total questions based on server data
-        for (let i = 0; i < s.totalQuestions; i++) {
-            const revealed = s.clueCount[i] || 0;
-            clueHtml += `
-                <tr>
-                    <td>Question ${i + 1}</td>
-                    <td>(Index ${i})</td>
-                    <td>
-                        <span style="color: ${revealed > 0 ? '#ff9800' : '#555'}">
-                            ${"💡".repeat(revealed)}${"⚪".repeat(3 - revealed)}
-                        </span> 
-                        (${revealed}/3)
-                    </td>
-                </tr>
-            `;
+            fetch("/players").then(r=>r.json()).then(players => {
+                // Sort by progress
+                const sorted = [...players].sort((a,b) => b.qIndex - a.qIndex);
+                const html = sorted.map((p, i) => `
+                    <tr>
+                        <td>#${i + 1}</td>
+                        <td><strong>${p.name}</strong></td>
+                        <td>Question ${p.qIndex + 1}</td>
+                        <td class="${p.end ? 'status-finished' : 'status-playing'}">${p.end ? 'COMPLETED' : 'HUNTING'}</td>
+                    </tr>
+                `).join('');
+                document.getElementById("playerTable").innerHTML = html;
+            });
         }
-        clueTable.innerHTML = clueHtml;
-    });
-}
+        setInterval(updateAdmin, 3000);
+        updateAdmin();
+        
     </script>
 </body>
 </html>
