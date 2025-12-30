@@ -56,7 +56,7 @@ function loadQuestion() {
             document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
             document.getElementById("qText").innerText = d.q;
             
-            // Light up bulbs
+            // Light up bulbs based on revealed clues
             for (let i = 0; i < 3; i++) {
                 const bulb = document.getElementById(`bulb${i}`);
                 if (d.clues && d.clues[i]) {
@@ -67,7 +67,15 @@ function loadQuestion() {
                     bulb.style.textShadow = "none";
                 }
             }
-            document.getElementById("clueText").innerText = d.clues.length ? d.clues.join(" | ") : "";
+            
+            // NEW LOGIC: Display each clue on a different line
+            const clueContainer = document.getElementById("clueText");
+            if (d.clues && d.clues.length > 0) {
+                // Joins clues with an HTML line break
+                clueContainer.innerHTML = d.clues.join("<br>"); 
+            } else {
+                clueContainer.innerHTML = "";
+            }
         }
     });
 }
