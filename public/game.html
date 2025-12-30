@@ -1,16 +1,25 @@
-<link rel="stylesheet" href="style.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Treasure Hunt - Playing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card">
+        <h1 id="qno">Connecting...</h1>
+        <p id="msg" style="font-weight: bold; font-size: 1.2em;"></p>
 
-<div class="card">
-  <h1>Shree Krishna Heights</h1>
-  <h2 id="qno">Treasure Hunt</h2>
-
-  <p id="q"></p>
-  <p id="clues"></p>
-
-  <input id="word" placeholder="Enter code word">
-  <button onclick="submit()">Submit</button>
-
-  <p id="msg"></p>
-</div>
-
-<script src="js/game.js"></script>
+        <div id="gameArea">
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <p id="qText" style="font-size: 18px; line-height: 1.5;"></p>
+            </div>
+            <p id="clueText" style="color: #4caf50; min-height: 20px; font-weight: bold;"></p>
+            <input id="answerInput" placeholder="ENTER ANSWER" style="text-transform: uppercase;">
+            <button onclick="submitAnswer()">SUBMIT ANSWER</button>
+        </div>
+    </div>
+    <script src="js/game.js"></script>
+</body>
+</html>

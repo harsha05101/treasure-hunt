@@ -1,30 +1,37 @@
-<link rel="stylesheet" href="style.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasure Hunt - Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card">
+        <h1>Shree Krishna Heights</h1>
+        <h2>Treasure Hunt Entrance</h2>
+        <p>Enter your team name to begin the adventure.</p>
+        <input id="name" placeholder="TEAM NAME" autocomplete="off">
+        <button onclick="start()">START EXPEDITION</button>
+    </div>
 
-<div class="card">
-  <h1>Shree Krishna Heights</h1>
-  <h2>Treasure Hunt</h2>
+    <script>
+    function start() {
+        const name = document.getElementById("name").value.trim();
+        if (!name) return alert("Please enter a Team Name!");
 
-  <input id="name" placeholder="Enter Team Name">
-  <button onclick="start()">Start Game</button>
-
-  <p id="msg"></p>
-</div>
-
-<script>
-function start() {
-  const name = document.getElementById("name").value.trim();
-  if (!name) return;
-
-  fetch("/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  })
-  .then(r => r.json())
-  .then(p => {
-    localStorage.setItem("id", p.id);
-    localStorage.setItem("qIndex", 0);
-    location.href = "game.html";
-  });
-}
-</script>
+        fetch("/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        })
+        .then(r => r.json())
+        .then(p => {
+            localStorage.setItem("id", p.id);
+            localStorage.setItem("qIndex", 0);
+            location.href = "game.html";
+        });
+    }
+    </script>
+</body>
+</html>

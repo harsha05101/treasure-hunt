@@ -1,39 +1,86 @@
+* { box-sizing: border-box; }
+
 body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  color: white;
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Use relative path for web */
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("/image.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
 }
 
 .card {
-  background: rgba(0,0,0,0.6);
-  padding: 30px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 30px;
+    border-radius: 20px;
+    width: 95%;
+    max-width: 450px; /* Mobile View default */
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-input, button {
-  padding: 10px;
-  margin: 8px;
-  width: 90%;
-  border-radius: 6px;
-  border: none;
+/* Desktop View for Admin/Leaderboard */
+.admin-wide {
+    max-width: 900px;
+}
+
+h1 { margin: 0 0 10px; font-size: 24px; color: #ff9800; }
+h2 { margin: 0 0 20px; font-size: 18px; opacity: 0.9; }
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid #444;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 16px;
 }
 
 button {
-  background: #ff9800;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #ff9800;
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.admin-btn {
-  background: #e91e63;
-  color: white;
+button:hover { background: #e68a00; }
+button:active { transform: scale(0.98); }
+
+/* Table Styling */
+.table-container {
+    margin-top: 25px;
+    overflow-x: auto;
 }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px; /* Bigger text */
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #333;
+    text-align: left;
+}
+
+th { color: #ff9800; text-transform: uppercase; font-size: 14px; }
+
+.status-playing { color: #4caf50; font-weight: bold; }
+.status-finished { color: #2196f3; }

@@ -1,26 +1,78 @@
-<link rel="stylesheet" href="style.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Treasure Hunt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card admin-wide">
+        <h1>Control Tower</h1>
+        <h2 id="statusDisplay">Status: Loading...</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+            <button onclick="setState('PLAYING')" style="background: #4caf50;">▶ RESUME GAME</button>
+            <button onclick="setState('BREAK')" style="background: #2196f3;">⏸ SET BREAK</button>
+            <button onclick="setState('FINISHED')" style="background: #f44336;">🏁 END GAME</button>
+            <button onclick="restartGame()" style="background: #000; color: white;">🔁 HARD RESET</button>
+        </div>
 
-<div class="card">
-  <h1>Shree Krishna Heights</h1>
-  <h2>Treasure Hunt – Admin Panel</h2>
+        <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+            <label>Target Question ID (0, 1, 2...):</label>
+            <input id="qIdx" type="number" value="0">
+            <button onclick="revealClue()">REVEAL NEXT CLUE FOR THIS QUESTION</button>
+        </div>
 
-  <button class="admin-btn" onclick="setState('BREAK')">BREAK</button>
-  <button class="admin-btn" onclick="setState('PLAYING')">RESUME</button>
-  <button class="admin-btn" onclick="setState('FINISHED')">FINISH</button>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Rank</th><th>Team Name</th><th>Current Q</th><th>Status</th></tr>
+                </thead>
+                <tbody id="playerTable"></tbody>
+            </table>
+        </div>
+        
+        <button onclick="window.open('/export')" style="margin-top: 20px; background: #673ab7; color: white;">📥 DOWNLOAD CSV RESULTS</button>
+    </div>
 
-  <input id="qIndex" type="number" placeholder="Question Index (0-based)">
-  <button onclick="reveal()">Reveal Next Clue</button>
-  <button onclick="exportCSV()">Export Results</button>
+    <script>
+        function setState(state) {
+            fetch("/state", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({state}) });
+        }
 
-  <div class="table-wrap">
-    <table id="t">
-      <tr>
-        <th>Team</th>
-        <th>Current Question</th>
-        <th>Status</th>
-      </tr>
-    </table>
-  </div>
-</div>
+        function revealClue() {
+            const qIndex = document.getElementById("qIdx").value;
+            fetch("/reveal", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({qIndex}) });
+        }
 
-<script src="js/admin.js"></script>
+        function restartGame() {
+            if(confirm("DANGER: This will wipe all player progress. Continue?")) {
+                fetch("/restart", {method:"POST"});
+            }
+        }
+
+        function updateAdmin() {
+            fetch("/admin/status").then(r=>r.json()).then(s => {
+                document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
+            });
+
+            fetch("/players").then(r=>r.json()).then(players => {
+                // Sort by progress
+                const sorted = [...players].sort((a,b) => b.qIndex - a.qIndex);
+                const html = sorted.map((p, i) => `
+                    <tr>
+                        <td>#${i + 1}</td>
+                        <td><strong>${p.name}</strong></td>
+                        <td>Question ${p.qIndex + 1}</td>
+                        <td class="${p.end ? 'status-finished' : 'status-playing'}">${p.end ? 'COMPLETED' : 'HUNTING'}</td>
+                    </tr>
+                `).join('');
+                document.getElementById("playerTable").innerHTML = html;
+            });
+        }
+        setInterval(updateAdmin, 3000);
+        updateAdmin();
+    </script>
+</body>
+</html>
