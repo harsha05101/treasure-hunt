@@ -35,6 +35,19 @@
         
         <button onclick="window.open('/export')" style="margin-top: 20px; background: #673ab7; color: white;">📥 DOWNLOAD CSV RESULTS</button>
     </div>
+    <div class="table-container">
+    <h3>Question & Clue Status</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Q#</th>
+                <th>Question Preview</th>
+                <th>Clues Revealed</th>
+            </tr>
+        </thead>
+        <tbody id="clueStatusTable"></tbody>
+    </table>
+</div>
 
     <script>
         function setState(state) {
@@ -53,26 +66,34 @@
         }
 
         function updateAdmin() {
-            fetch("/admin/status").then(r=>r.json()).then(s => {
-                document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
-            });
+    // ... your existing code for statusDisplay and playerTable ...
 
-            fetch("/players").then(r=>r.json()).then(players => {
-                // Sort by progress
-                const sorted = [...players].sort((a,b) => b.qIndex - a.qIndex);
-                const html = sorted.map((p, i) => `
-                    <tr>
-                        <td>#${i + 1}</td>
-                        <td><strong>${p.name}</strong></td>
-                        <td>Question ${p.qIndex + 1}</td>
-                        <td class="${p.end ? 'status-finished' : 'status-playing'}">${p.end ? 'COMPLETED' : 'HUNTING'}</td>
-                    </tr>
-                `).join('');
-                document.getElementById("playerTable").innerHTML = html;
-            });
+    fetch("/admin/status").then(r => r.json()).then(s => {
+        document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
+        
+        // Populate the Question/Clue Table
+        const clueTable = document.getElementById("clueStatusTable");
+        let clueHtml = "";
+        
+        // Loop through total questions based on server data
+        for (let i = 0; i < s.totalQuestions; i++) {
+            const revealed = s.clueCount[i] || 0;
+            clueHtml += `
+                <tr>
+                    <td>Question ${i + 1}</td>
+                    <td>(Index ${i})</td>
+                    <td>
+                        <span style="color: ${revealed > 0 ? '#ff9800' : '#555'}">
+                            ${"💡".repeat(revealed)}${"⚪".repeat(3 - revealed)}
+                        </span> 
+                        (${revealed}/3)
+                    </td>
+                </tr>
+            `;
         }
-        setInterval(updateAdmin, 3000);
-        updateAdmin();
+        clueTable.innerHTML = clueHtml;
+    });
+}
     </script>
 </body>
 </html>
