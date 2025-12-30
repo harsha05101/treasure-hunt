@@ -1,41 +1,7 @@
 module.exports = [
-  { q: "Where time?",
-    answer: "CLOC",
-    clues: ["I rig", "I hae hands", "Everyone checks me"] },
-
-  { q: "I feed ",
-    answer: "FOOD",
-    clues: ["Smell", "Plates", "Students love me"] },
-
-  { q: "Silence ",
-    answer: "BOOK",
-    clues: ["Shelvs", "Study", "Knowledge"] },
-
-  { q: "Sweat ",
-    answer: "PLAY",
-    clues: ["Running", "Games", "Spots"] },
-
-  { q: "Cars ",
-    answer: "PARK",
-    clues: ["Vehicles", "Secity", "Parking"] },
-
-  { q: "Where ",
-    answer: "FLG",
-    clues: ["Ceremony", "Morning", "Nation"] },
-
-  { q: "Steps ",
-    answer: "STEP",
-    clues: ["Climb", "Floors", "No lift"] },
-
-  { q: "I watch ",
-    answer: "WATCH",
-    clues: ["Security", "Mounted", "Camera"] },
-
-  { q: "Victory ",
-    answer: "FINAL",
-    clues: ["End", "Winner", "Finish"] },
-
-  { q: "Place ",
-    answer: "WIN",
-    clues: ["Prze", "Celebrate", "Success"] }
+  { q: "Where time lives?", answer: "CLOCK", clues: ["Ticks", "Has hands", "Everyone checks me"] },
+  { q: "I feed everyone", answer: "FOOD", clues: ["Smell", "Plates", "Students love me"] },
+  { q: "Silent knowledge", answer: "BOOK", clues: ["Shelves", "Study", "Library"] },
+  { q: "Sweat & fun", answer: "PLAY", clues: ["Games", "Running", "Sports"] },
+  { q: "Cars sleep here", answer: "PARK", clues: ["Vehicles", "Security", "Parking"] }
 ];
