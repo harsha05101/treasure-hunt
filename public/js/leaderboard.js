@@ -2,6 +2,7 @@
  * Converts seconds to mm:ss format
  */
 function formatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return "00:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -23,24 +24,31 @@ function updateLeaderboard() {
                 const totalSeconds = (p.times || []).reduce((a, b) => a + b, 0);
                 return { ...p, totalSeconds };
             }).sort((a, b) => {
+                // First, sort by question progress (Descending)
                 if (b.qIndex !== a.qIndex) return b.qIndex - a.qIndex;
+                // Second, sort by time (Ascending - faster is better)
                 return a.totalSeconds - b.totalSeconds;
             });
 
             // 2. Generate HTML
+            if (ranked.length === 0) {
+                tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Waiting for teams to join...</td></tr>";
+                return;
+            }
+
             tableBody.innerHTML = ranked.map((p, i) => `
                 <tr style="${p.end ? 'background: rgba(76, 175, 80, 0.2);' : ''}">
                     <td>#${i + 1}</td>
                     <td><strong>${p.name}</strong></td>
-                    <td>Question ${p.qIndex}</td>
+                    <td>Question ${p.qIndex + 1}</td>
                     <td>${formatTime(p.totalSeconds)}</td>
                     <td>${p.end ? "🏆 FINISHED" : "🏃 HUNTING"}</td>
                 </tr>
             `).join('');
         })
-        .catch(err => console.error("Leaderboard error:", err));
+        .catch(err => console.error("Leaderboard fetch error:", err));
 }
 
-// Faster refresh for live feedback during the hunt
+// Refresh every 2 seconds for live feedback
 setInterval(updateLeaderboard, 2000);
 updateLeaderboard();
