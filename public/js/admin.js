@@ -67,6 +67,37 @@ function revealClue() {
         body: JSON.stringify({ qIndex: Number(qIndexInput.value) }) 
     });
 }
+function updateAdminClueStatus() {
+    fetch("/state").then(r => r.json()).then(s => {
+        // Loop through every question shown on the admin panel
+        for (let qIdx = 0; qIdx < s.clueVersion.length; qIdx++) {
+            const revealedCount = s.clueVersion[qIdx];
+            
+            // Update bulbs for this specific question index
+            for (let i = 0; i < 3; i++) {
+                const bulb = document.getElementById(`bulb-${qIdx}-${i}`);
+                if (bulb) {
+                    if (i < revealedCount) {
+                        bulb.style.opacity = "1";
+                        bulb.style.filter = "drop-shadow(0 0 5px #ffeb3b)";
+                    } else {
+                        bulb.style.opacity = "0.2";
+                        bulb.style.filter = "none";
+                    }
+                }
+            }
+            
+            // Update the text counter (e.g., 1/3)
+            const countLabel = document.getElementById(`count-${qIdx}`);
+            if (countLabel) {
+                countLabel.innerText = `(${revealedCount}/3)`;
+            }
+        }
+    });
+}
+
+// Add this to your existing setInterval loop in admin.js
+setInterval(updateAdminClueStatus, 2000);
 
 function restartGame() {
     if (confirm("DANGER: This will delete ALL players and their progress. Continue?")) {
