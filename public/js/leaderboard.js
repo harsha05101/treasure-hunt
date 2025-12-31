@@ -9,11 +9,14 @@ function updateLeaderboard() {
         .then(r => r.json())
         .then(players => {
             const tableBody = document.getElementById("leaderboardBody");
-            if (!tableBody) return;
+            if (!tableBody) {
+                console.error("Table body 'leaderboardBody' not found!");
+                return;
+            }
 
-            // Sort logic: Most questions first, then fastest time
+            // Rank players: Higher Question Index first, then fastest time
             const ranked = [...players].map(p => {
-                const totalSeconds = p.times.reduce((a, b) => a + b, 0);
+                const totalSeconds = (p.times || []).reduce((a, b) => a + b, 0);
                 return { ...p, totalSeconds };
             }).sort((a, b) => {
                 if (b.qIndex !== a.qIndex) return b.qIndex - a.qIndex;
@@ -30,8 +33,9 @@ function updateLeaderboard() {
                 </tr>
             `).join('');
         })
-        .catch(err => console.error("Leaderboard error:", err));
+        .catch(err => console.error("Leaderboard fetch error:", err));
 }
 
-setInterval(updateLeaderboard, 3000);
+// Refresh faster for live feedback
+setInterval(updateLeaderboard, 2000);
 updateLeaderboard();

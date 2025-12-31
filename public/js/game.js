@@ -4,7 +4,7 @@ let lastGameVersion = -1;
 let lastClueVersion = -1;
 let lastGameState = null; 
 
-// Audio Objects - Ensure these match your file extensions exactly
+// Audio Objects - Ensure these exist in /public/sounds/
 const clueSound = new Audio("/sounds/clue.wav");
 const breakSound = new Audio("/sounds/break.mp3");
 const resumeSound = new Audio("/sounds/resume.mp3");
@@ -20,6 +20,7 @@ function poll() {
         const area = document.getElementById("gameArea");
         const msgBox = document.getElementById("msg");
 
+        // Handle Global Resets
         if (lastGameVersion !== -1 && s.gameVersion !== lastGameVersion) {
             localStorage.clear();
             location.href = "index.html";
@@ -27,16 +28,17 @@ function poll() {
         }
         lastGameVersion = s.gameVersion;
 
-        // Trigger sounds on state changes
+        // Trigger sounds on Admin State changes
         if (s.state !== lastGameState) {
             if (lastGameState !== null) {
                 if (s.state === "BREAK") playSound(breakSound);
                 else if (s.state === "PLAYING" && lastGameState === "BREAK") playSound(resumeSound);
-                else if (s.state === "FINISHED") playSound(finishSound);
+                else if (s.state === "FINISHED") playSound(finishSound); // Trigger on Admin finish
             }
             lastGameState = s.state; 
         }
 
+        // UI Logic for Game States
         if (s.state === "BREAK") {
             area.style.display = "none";
             msgBox.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
@@ -52,6 +54,7 @@ function poll() {
         area.style.display = "block";
         msgBox.innerText = "";
 
+        // Clue Refreshing
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) playSound(clueSound);
@@ -63,26 +66,30 @@ function poll() {
 
 function loadQuestion() {
     fetch(`/question/${qIndex}`).then(r => r.json()).then(d => {
-        if (d.q) {
-            document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
-            document.getElementById("qText").innerText = d.q;
-            
-            for (let i = 0; i < 3; i++) {
-                const bulb = document.getElementById(`bulb${i}`);
-                bulb.style.opacity = (d.clues && d.clues[i]) ? "1" : "0.2";
-                bulb.style.textShadow = (d.clues && d.clues[i]) ? "0 0 10px #ffeb3b" : "none";
-            }
-            
-            const clueContainer = document.getElementById("clueText");
-            clueContainer.innerHTML = d.clues ? d.clues.join("<br>") : "";
+        // If no question is returned, player has finished all questions
+        if (!d.q) {
+            document.getElementById("gameArea").style.display = "none";
+            document.getElementById("msg").innerText = "🏆 ALL QUESTIONS COMPLETED!";
+            playSound(finishSound); // Trigger on individual completion
+            return;
         }
+        document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
+        document.getElementById("qText").innerText = d.q;
+        
+        for (let i = 0; i < 3; i++) {
+            const bulb = document.getElementById(`bulb${i}`);
+            bulb.style.opacity = (d.clues && d.clues[i]) ? "1" : "0.2";
+            bulb.style.textShadow = (d.clues && d.clues[i]) ? "0 0 10px #ffeb3b" : "none";
+        }
+        
+        const clueContainer = document.getElementById("clueText");
+        clueContainer.innerHTML = d.clues ? d.clues.join("<br>") : "";
     });
 }
 
 function submitAnswer() {
     const inputField = document.getElementById("answerInput");
-    // Ensure the answer sent is UPPERCASE
-    const word = inputField.value.trim().toUpperCase();
+    const word = inputField.value.trim().toUpperCase(); // Force caps
     if(!word) return;
     
     fetch("/submit", {
