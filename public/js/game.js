@@ -128,6 +128,19 @@ function submitAnswer() {
         }
     });
 }
+// Add a helper to play sounds safely
+function playSound(audioObject) {
+    audioObject.currentTime = 0; // Reset to start
+    audioObject.play().catch(error => {
+        console.log("Autoplay prevented. User must click the page first.", error);
+    });
+}
+
+// Then replace your .play() calls with the helper:
+// Example for Clue Reveal:
+if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) {
+    playSound(clueSound);
+}
 
 // Start the polling loop and initial load
 setInterval(poll, 2500);
