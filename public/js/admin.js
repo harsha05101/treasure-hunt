@@ -9,7 +9,7 @@ function updateDashboard() {
             // Update the top status text
             document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
 
-            // Update the Clue Status Table with unique IDs for bulbs
+            // Generate Clue Status Table with unique IDs for bulb sync
             const clueTable = document.getElementById("clueStatusTable");
             let clueHtml = "";
             for (let i = 0; i < s.totalQuestions; i++) {
@@ -17,9 +17,9 @@ function updateDashboard() {
                     <tr>
                         <td>Question ${i + 1} (Index ${i})</td>
                         <td style="font-size: 24px;">
-                            <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
-                            <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
-                            <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
+                            <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                            <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                            <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s;">💡</span>
                             <span id="count-${i}" style="font-size: 14px; margin-left: 10px;">(0/3)</span>
                         </td>
                     </tr>
@@ -28,7 +28,7 @@ function updateDashboard() {
             clueTable.innerHTML = clueHtml;
             
             // Immediately sync the bulb visuals with current server state
-            updateAdminClueStatus();
+            syncBulbVisuals(s.clueCount); 
         })
         .catch(err => console.error("Error fetching admin status:", err));
 
@@ -61,38 +61,28 @@ function updateDashboard() {
 }
 
 /**
- * Syncs the bulb opacity and drop-shadows based on revealed clues
+ * Helper to sync bulb opacity and glow based on the clueCount array
  */
-function updateAdminClueStatus() {
-    fetch("/state").then(r => r.json()).then(s => {
-        // clueVersion array contains the count of revealed clues per question index
-        for (let qIdx = 0; qIdx < s.clueVersion.length; qIdx++) {
-            const revealedCount = s.clueVersion[qIdx];
-            
-            // Update the 3 bulbs for this question index
-            for (let i = 0; i < 3; i++) {
-                const bulb = document.getElementById(`bulb-${qIdx}-${i}`);
-                if (bulb) {
-                    if (i < revealedCount) {
-                        bulb.style.opacity = "1";
-                        bulb.style.filter = "drop-shadow(0 0 8px #ffeb3b)";
-                    } else {
-                        bulb.style.opacity = "0.2";
-                        bulb.style.filter = "none";
-                    }
+function syncBulbVisuals(clueCountArray) {
+    clueCountArray.forEach((revealedCount, qIdx) => {
+        for (let i = 0; i < 3; i++) {
+            const bulb = document.getElementById(`bulb-${qIdx}-${i}`);
+            if (bulb) {
+                if (i < revealedCount) {
+                    bulb.style.opacity = "1";
+                    bulb.style.filter = "drop-shadow(0 0 8px #ffeb3b)"; // Glowing effect
+                } else {
+                    bulb.style.opacity = "0.2";
+                    bulb.style.filter = "none";
                 }
             }
-            
-            // Update the text counter (e.g., 1/3)
-            const countLabel = document.getElementById(`count-${qIdx}`);
-            if (countLabel) {
-                countLabel.innerText = `(${revealedCount}/3)`;
-            }
         }
+        const label = document.getElementById(`count-${qIdx}`);
+        if (label) label.innerText = `(${revealedCount}/3)`;
     });
 }
 
-// ACTION FUNCTIONS
+// --- ACTION FUNCTIONS ---
 
 function setState(state) {
     fetch("/state", { 
@@ -104,33 +94,32 @@ function setState(state) {
 
 function revealClue() {
     const qIndexInput = document.getElementById("qIdx");
-    const qIndexValue = Number(qIndexInput.value);
+    const qVal = Number(qIndexInput.value);
     
     fetch("/reveal", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ qIndex: qIndexValue }) 
-    }).then(() => {
-        // Refresh visuals immediately after revealing
-        updateAdminClueStatus();
-    });
+        body: JSON.stringify({ qIndex: qVal }) 
+    }).then(() => updateDashboard());
 }
 
 function restartGame() {
-    if (confirm("DANGER: This will delete ALL players and their progress. Continue?")) {
-        fetch("/restart", { method: "POST" }).then(() => {
-            location.reload();
-        });
+    if (confirm("DANGER: This will delete ALL progress. Continue?")) {
+        fetch("/restart", { method: "POST" }).then(() => location.reload());
     }
 }
 
-// AUTO-REFRESH CYCLES
+/**
+ * Redirects to the export route to download CSV
+ */
+function downloadCSV() {
+    window.location.href = "/export";
+}
 
-// Refresh the dashboard every 3 seconds
+// --- INITIALIZATION ---
+
+// Refresh both tables every 3 seconds
 setInterval(updateDashboard, 3000);
-
-// Sync clue bulb visuals every 2 seconds
-setInterval(updateAdminClueStatus, 2000);
 
 // Initial load on page startup
 updateDashboard();
