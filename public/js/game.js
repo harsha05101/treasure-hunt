@@ -3,6 +3,9 @@ let qIndex = Number(localStorage.getItem("qIndex")) || 0;
 let lastGameVersion = -1;
 let lastClueVersion = -1;
 
+// Initialize Audio Objects
+const successSound = new Audio("/sounds/success.mp3");
+const errorSound = new Audio("/sounds/error.mp3");
 const clueSound = new Audio("/sounds/clue.mp3");
 
 function poll() {
@@ -10,7 +13,7 @@ function poll() {
         const area = document.getElementById("gameArea");
         const msgBox = document.getElementById("msg");
 
-        // 1. Handle HARD RESET Only (Only if version changes)
+        // 1. Handle HARD RESET (Redirect if version changes)
         if (lastGameVersion !== -1 && s.gameVersion !== lastGameVersion) {
             localStorage.clear();
             location.href = "index.html";
@@ -38,11 +41,11 @@ function poll() {
         area.style.display = "block";
         msgBox.innerText = "";
 
-        // Auto-refresh clues
+        // Auto-refresh clues and play sound
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) {
-                clueSound.play();
+                clueSound.play().catch(e => console.log("Audio blocked by browser"));
             }
             lastClueVersion = currentClueVer;
             loadQuestion();
@@ -68,10 +71,9 @@ function loadQuestion() {
                 }
             }
             
-            // NEW LOGIC: Display each clue on a different line
+            // Display each clue on a different line
             const clueContainer = document.getElementById("clueText");
             if (d.clues && d.clues.length > 0) {
-                // Joins clues with an HTML line break
                 clueContainer.innerHTML = d.clues.join("<br>"); 
             } else {
                 clueContainer.innerHTML = "";
@@ -81,7 +83,8 @@ function loadQuestion() {
 }
 
 function submitAnswer() {
-    const word = document.getElementById("answerInput").value;
+    const inputField = document.getElementById("answerInput");
+    const word = inputField.value;
     if(!word) return;
     
     fetch("/submit", {
@@ -90,17 +93,20 @@ function submitAnswer() {
         body: JSON.stringify({ id, word })
     }).then(r => r.json()).then(d => {
         if (d.ok) {
+            successSound.play().catch(e => console.log("Audio blocked"));
             qIndex++;
             localStorage.setItem("qIndex", qIndex);
-            document.getElementById("answerInput").value = "";
-            lastClueVersion = -1; 
+            inputField.value = "";
+            lastClueVersion = -1; // Force reload for the next question
             loadQuestion();
         } else {
+            errorSound.play().catch(e => console.log("Audio blocked"));
             alert("❌ Incorrect. Try again!");
         }
     });
 }
 
+// Initialization
 setInterval(poll, 2500);
 loadQuestion();
 poll();
