@@ -2,26 +2,25 @@
  * Main update function that refreshes both tables
  */
 function updateDashboard() {
-    // 1. Fetch and Update Game Status & Clue Table
+    // 1. Fetch Game Status and Clue Counts
     fetch("/admin/status")
         .then(r => r.json())
         .then(s => {
-            // Update the top status text
             document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
 
             const clueTable = document.getElementById("clueStatusTable");
             
-            // Fix: Only rebuild the HTML if the table is empty to prevent flicker/logic breaks
-            if (clueTable.innerHTML.trim() === "") {
+            // Generate the HTML rows ONLY if the table is empty
+            if (clueTable.innerHTML.trim() === "" && s.totalQuestions > 0) {
                 let clueHtml = "";
                 for (let i = 0; i < s.totalQuestions; i++) {
                     clueHtml += `
                         <tr>
-                            <td>Question ${i + 1} (Index ${i})</td>
+                            <td>Question ${i + 1}</td>
                             <td style="font-size: 24px;">
-                                <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
-                                <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
-                                <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
+                                <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                                <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                                <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s;">💡</span>
                                 <span id="count-${i}" style="font-size: 14px; margin-left: 10px;">(0/3)</span>
                             </td>
                         </tr>
@@ -30,26 +29,34 @@ function updateDashboard() {
                 clueTable.innerHTML = clueHtml;
             }
             
-            // Sync visuals using the data directly from the status call
+            // Apply the glowing effect to the bulbs based on server data
             if (s.clueCount) {
-                syncBulbVisuals(s.clueCount); 
+                s.clueCount.forEach((revealedCount, qIdx) => {
+                    for (let i = 0; i < 3; i++) {
+                        const bulb = document.getElementById(`bulb-${qIdx}-${i}`);
+                        if (bulb) {
+                            if (i < revealedCount) {
+                                bulb.style.opacity = "1";
+                                bulb.style.filter = "drop-shadow(0 0 8px #ffeb3b)"; // Glow effect
+                            } else {
+                                bulb.style.opacity = "0.2";
+                                bulb.style.filter = "none";
+                            }
+                        }
+                    }
+                    const label = document.getElementById(`count-${qIdx}`);
+                    if (label) label.innerText = `(${revealedCount}/3)`;
+                });
             }
         })
-        .catch(err => console.error("Error fetching admin status:", err));
+        .catch(err => console.error("Admin status fetch failed:", err));
 
-    // 2. Fetch and Update Player Rankings Table
+    // 2. Update Player Rankings Table
     fetch("/players")
         .then(r => r.json())
         .then(players => {
             const playerTable = document.getElementById("playerTable");
-            
-            // Sort players: Most questions first, then fastest total time
-            const sorted = [...players].sort((a, b) => {
-                if (b.qIndex !== a.qIndex) return b.qIndex - a.qIndex;
-                const timeA = (a.times || []).reduce((sum, t) => sum + t, 0);
-                const timeB = (b.times || []).reduce((sum, t) => sum + t, 0);
-                return timeA - timeB;
-            });
+            const sorted = [...players].sort((a, b) => b.qIndex - a.qIndex);
             
             playerTable.innerHTML = sorted.map((p, i) => `
                 <tr>
@@ -61,34 +68,10 @@ function updateDashboard() {
                     </td>
                 </tr>
             `).join('');
-        })
-        .catch(err => console.error("Error fetching players:", err));
+        });
 }
 
-/**
- * Enhanced sync helper to ensure IDs exist before styling
- */
-function syncBulbVisuals(clueCountArray) {
-    clueCountArray.forEach((revealedCount, qIdx) => {
-        for (let i = 0; i < 3; i++) {
-            const bulb = document.getElementById(`bulb-${qIdx}-${i}`);
-            if (bulb) {
-                if (i < revealedCount) {
-                    bulb.style.opacity = "1";
-                    bulb.style.filter = "drop-shadow(0 0 8px #ffeb3b)"; // Glowing effect
-                } else {
-                    bulb.style.opacity = "0.2";
-                    bulb.style.filter = "none";
-                }
-            }
-        }
-        const label = document.getElementById(`count-${qIdx}`);
-        if (label) label.innerText = `(${revealedCount}/3)`;
-    });
-}
-
-// --- ACTION FUNCTIONS ---
-
+// ACTION FUNCTIONS
 function setState(state) {
     fetch("/state", { 
         method: "POST", 
@@ -100,7 +83,6 @@ function setState(state) {
 function revealClue() {
     const qIndexInput = document.getElementById("qIdx");
     const qVal = Number(qIndexInput.value);
-    
     fetch("/reveal", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -109,22 +91,11 @@ function revealClue() {
 }
 
 function restartGame() {
-    if (confirm("DANGER: This will delete ALL players and their progress. Continue?")) {
-        fetch("/restart", { method: "POST" }).then(() => {
-            document.getElementById("clueStatusTable").innerHTML = ""; // Clear table to force rebuild
-            location.reload();
-        });
+    if (confirm("DANGER: Delete ALL progress?")) {
+        fetch("/restart", { method: "POST" }).then(() => location.reload());
     }
 }
 
-function downloadCSV() {
-    window.location.href = "/export";
-}
-
-// --- INITIALIZATION ---
-
-// Refresh both tables every 3 seconds
+// Initialization
 setInterval(updateDashboard, 3000);
-
-// Initial load on page startup
 updateDashboard();
