@@ -19,32 +19,25 @@ app.get("/state", (req, res) => {
 
 app.post("/state", (req, res) => {
     const newState = req.body.state;
-    
     if (newState === "BREAK" && gameState !== "BREAK") {
         breakStartTime = Date.now(); 
     } else if (newState === "PLAYING" && gameState === "BREAK") {
         if (breakStartTime) {
             const breakDuration = Date.now() - breakStartTime;
-            players.forEach(p => {
-                if (!p.end) p.lastTime += breakDuration;
-            });
+            players.forEach(p => { if (!p.end) p.lastTime += breakDuration; });
         }
         breakStartTime = null;
     }
-    
     gameState = newState;
-    // NOTE: We DO NOT increment gameVersion here. 
-    // Incrementing gameVersion tells clients the game was RESTARTED (Wiped).
     res.sendStatus(200);
 });
 
-// HARD RESET - Use this only to wipe all players
 app.post("/restart", (req, res) => {
     players = [];
     clueCount = {};
     clueVersion = {};
     gameState = "PLAYING";
-    gameVersion++; // This signals a wipe, forcing players to index.html
+    gameVersion++; 
     breakStartTime = null;
     res.sendStatus(200);
 });
@@ -53,7 +46,6 @@ app.post("/restart", (req, res) => {
 app.post("/register", (req, res) => {
     const name = req.body.name?.trim();
     if (!name) return res.status(400).json({ error: "Name required" });
-
     const player = {
         id: "ID-" + Date.now() + Math.floor(Math.random() * 1000),
         name,
@@ -81,6 +73,7 @@ app.post("/submit", (req, res) => {
     const p = players.find(x => x.id === id);
     if (!p || gameState !== "PLAYING" || p.end) return res.json({ ok: false });
 
+    // Force Uppercase Validation
     if (word.trim().toUpperCase() === questions[p.qIndex].answer.toUpperCase()) {
         const now = Date.now();
         p.times.push(Math.floor((now - p.lastTime) / 1000));
@@ -101,80 +94,40 @@ app.post("/reveal", (req, res) => {
 });
 
 app.get("/players", (req, res) => res.json(players));
+
 app.get("/admin/status", (req, res) => {
-    res.json({ gameState, clueCount, totalQuestions: questions.length });
-});
-
-// Helper function to convert seconds to mm:ss format
-function formatTime(seconds) {
-    if (!seconds && seconds !== 0) return "00:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-// ... existing server setup ...
-
-app.post("/submit", (req, res) => {
-    const { id, word } = req.body;
-    const p = players.find(x => x.id === id);
-    if (!p || gameState !== "PLAYING" || p.end) return res.json({ ok: false });
-
-    // Force player input to UPPERCASE and trim whitespace
-    const playerAnswer = word.trim().toUpperCase();
-    const correctAnswer = questions[p.qIndex].answer.toUpperCase();
-
-    if (playerAnswer === correctAnswer) {
-        const now = Date.now();
-        p.times.push(Math.floor((now - p.lastTime) / 1000));
-        p.lastTime = now;
-        p.qIndex++;
-        
-        if (p.qIndex >= questions.length) p.end = now;
-        return res.json({ ok: true });
+    // Convert object to array for frontend bulb sync
+    const clueArray = [];
+    for (let i = 0; i < questions.length; i++) {
+        clueArray.push(clueCount[i] || 0);
     }
-    res.json({ ok: false, msg: "Wrong Answer!" });
+    res.json({ gameState, clueCount: clueArray, totalQuestions: questions.length });
 });
-
-// ... rest of server code ...
 
 app.get("/export", (req, res) => {
-    // 1. Calculate totals and Sort by fastest total time to determine "Place"
     const ranked = [...players].map(p => {
         const totalSeconds = p.times.reduce((a, b) => a + b, 0);
         return { ...p, totalSeconds };
     }).sort((a, b) => {
-        // Teams that finished go first, then sorted by fastest time
         if (a.end && !b.end) return -1;
         if (!a.end && b.end) return 1;
         return a.totalSeconds - b.totalSeconds;
     });
 
-    // 2. Build CSV Header
     let csv = "Place,Team Name";
-    for (let i = 1; i <= questions.length; i++) {
-        csv += `,Question ${i} (mm:ss)`;
-    }
-    csv += ",Total Time (mm:ss),Status\n";
+    for (let i = 1; i <= questions.length; i++) csv += `,Question ${i}`;
+    csv += ",Total Time,Status\n";
 
-    // 3. Build CSV Rows
     ranked.forEach((p, index) => {
-        // Place is the index + 1
         let row = `${index + 1},${p.name}`;
-        
-        // Individual Question Times
         for (let j = 0; j < questions.length; j++) {
-            row += `,${p.times[j] ? formatTime(p.times[j]) : "N/A"}`;
+            row += `,${p.times[j] || "N/A"}`;
         }
-        
-        // Total Time and Status
-        row += `,${formatTime(p.totalSeconds)},${p.end ? "Finished" : "Playing"}\n`;
+        row += `,${p.totalSeconds},${p.end ? "Finished" : "Playing"}\n`;
         csv += row;
     });
-
-    // 4. Send File
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", "attachment; filename=treasure_hunt_results.csv");
+    res.setHeader("Content-Disposition", "attachment; filename=results.csv");
     res.send(csv);
 });
 
-app.listen(3000, () => console.log("Server active on http://localhost:3000"));
+app.listen(3000, () => console.log("Server active on port 3000"));
