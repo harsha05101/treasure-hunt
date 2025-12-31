@@ -2,13 +2,24 @@ const id = localStorage.getItem("id");
 let qIndex = Number(localStorage.getItem("qIndex")) || 0;
 let lastGameVersion = -1;
 let lastClueVersion = -1;
-let lastGameState = "PLAYING"; // Tracks state changes for sounds
+let lastGameState = null; // Changed to null to ensure initial state sounds don't loop
 
 // Initialize Audio Objects
-const clueSound = new Audio("/sounds/clue.mp3");
+// Note: clueSound updated to .wav based on your file structure
+const clueSound = new Audio("/sounds/clue.wav");
 const breakSound = new Audio("/sounds/break.mp3");
 const resumeSound = new Audio("/sounds/resume.mp3");
 const finishSound = new Audio("/sounds/finish.mp3");
+
+/**
+ * Helper to play sounds safely and prevent looping
+ */
+function playSound(audioObject) {
+    audioObject.currentTime = 0; // Reset to start
+    audioObject.play().catch(error => {
+        console.log("Autoplay prevented. User must interact with the page first.", error);
+    });
+}
 
 /**
  * Polls the server for game state, version, and clue updates
@@ -26,14 +37,16 @@ function poll() {
         }
         lastGameVersion = s.gameVersion;
 
-        // 2. State Change Sounds (Break, Resume, Finish)
+        // 2. State Change Sounds (Break, Resume, Finish) - Only play ONCE on change
         if (s.state !== lastGameState) {
-            if (s.state === "BREAK") {
-                breakSound.play().catch(e => console.log("Audio blocked"));
-            } else if (s.state === "PLAYING" && lastGameState === "BREAK") {
-                resumeSound.play().catch(e => console.log("Audio blocked"));
-            } else if (s.state === "FINISHED") {
-                finishSound.play().catch(e => console.log("Audio blocked"));
+            if (lastGameState !== null) { // Prevents playing sounds immediately on page load
+                if (s.state === "BREAK") {
+                    playSound(breakSound);
+                } else if (s.state === "PLAYING" && lastGameState === "BREAK") {
+                    playSound(resumeSound);
+                } else if (s.state === "FINISHED") {
+                    playSound(finishSound);
+                }
             }
             lastGameState = s.state; 
         }
@@ -62,7 +75,7 @@ function poll() {
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) {
-                clueSound.play().catch(e => console.log("Audio blocked"));
+                playSound(clueSound);
             }
             lastClueVersion = currentClueVer;
             loadQuestion();
@@ -127,19 +140,6 @@ function submitAnswer() {
             alert(d.msg || "❌ Incorrect. Try again!");
         }
     });
-}
-// Add a helper to play sounds safely
-function playSound(audioObject) {
-    audioObject.currentTime = 0; // Reset to start
-    audioObject.play().catch(error => {
-        console.log("Autoplay prevented. User must click the page first.", error);
-    });
-}
-
-// Then replace your .play() calls with the helper:
-// Example for Clue Reveal:
-if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) {
-    playSound(clueSound);
 }
 
 // Start the polling loop and initial load
