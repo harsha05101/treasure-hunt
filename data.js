@@ -1,101 +1,100 @@
 module.exports = [
   {
-    q: "This game is played with a bat and ball, and India loves it the most. What is it?",
-    answer: "CRICKET",
+    q: "I am not a bat; I am not a ball. But without me, the game cannot begin.",
+    answer: "Cricket Ground",
     clues: [
-      "Sachin and Virat play this game",
-      "Played in stadiums",
-      "World Cup is famous for this"
+      "Matches are played here, not on the streets.",
+      "It has a pitch, boundary, and Tall Nets.",
+      "Stumps, Bats, Ball are involved in me."
+    ]
+  },
+
+  {  q: "I am the new member of this society, I am surrounded with Neem and Raavi Trees",
+    answer: "Nagalamma Temple",
+    clues: [
+      "People run away if they see me.",
+      "You will find me around the neck of Lord Shiva.",
+      "Devotional Place in the community."
     ]
   },
 
   {
-    q: "I have 7 days but I am not a week. What am I?",
-    answer: "CALENDAR",
+    q: "A colour feather is painted beautifully with lots of colours on the wall.",
+    answer: "Peacock Feather Wall",
     clues: [
-      "You look at me every day",
-      "I show dates",
-      "I hang on walls"
+      "Inspiration of India’s national bird",
+      "The famous flute player wears this on his head",
+      "It is painted clearly on a wall"
     ]
   },
 
   {
-    q: "Guess the place: Fitness, reading, and celebrations happen under one roof.",
-    answer: "CLUB HOUSE",
+    q: "I am last, but not the least.",
+    answer: "Rama Block",
     clues: [
-      "Gym is inside me",
-      "Functions are held here",
-      "Residents gather here"
+      "I am inside this community",
+      "I have 10 Doors",
+      "I am the smallest building in this Community"
     ]
   },
 
   {
-    q: "I speak without a mouth and hear without ears. What am I?",
-    answer: "ECHO",
+    q: "Children gather and run around free here, I live in 10th House ",
+    answer: "Play Area",
     clues: [
-      "You hear me in empty places",
-      "I repeat what you say",
-      "I have no body"
+      "My house is covered in Sand",
+      "Swings and slides are present",
+      "1 to 9 are my neighbors"
     ]
   },
 
   {
-    q: "This indoor game uses cards with numbers and colors. No money involved.",
-    answer: "UNO",
+    q: "I am the special person of this community, I have 4 Families with me.",
+    answer: "Club House",
     clues: [
-      "Red, yellow, green, blue",
-      "You say my name when one card is left",
-      "Popular family game"
+      "People celebrate their Special Moments here ",
+      "Knowledge is my 2nd Family ",
+      "Gym is another family where people build their Fitness"
     ]
   },
 
   {
-    q: "Guess the song: It plays when India wins a cricket match.",
-    answer: "VANDE MATARAM",
+    q: "I have stage but no roof, People love to gather and enjoy here.",
+    answer: "Open Auditorium",
     clues: [
-      "Patriotic song",
-      "Played during celebrations",
-      "Associated with national pride"
+      "Every Person enjoys to be in my open space",
+      "Stairs, Grass and Trees are my family",
+      "Shyama and Megha are my Co-Neighbors"
     ]
   },
 
   {
-    q: "I have keys but no locks. I have space but no room. What am I?",
-    answer: "KEYBOARD",
+    q: "I am a place, where everyone loves to Chit-Chat and Gossip",
+    answer: "3-Benches Spot",
     clues: [
-      "Used with computer",
-      "Typing happens on me",
-      "Letters and numbers present"
+      "I have 3 Large Spaces to occupy",
+      "Its a corner spot",
+      "Most of the space is occupied my Ladies"
     ]
   },
 
   {
-    q: "This game tests acting skills without speaking.",
-    answer: "DUMB CHARADES",
+    q: "I am dusty and rusty, everyone complains about the dust to me",
+    answer: "Neela Block",
     clues: [
-      "Movies are guessed",
-      "No talking allowed",
-      "Only actions"
+      "Morning's I am busy with many people surrounded around me making me into a new shape.",
+      "Bricks and Cement are my partners in crime",
+      "I will be a New Block to this community "
     ]
   },
 
-  {
-    q: "I go up and down but never move. What am I?",
-    answer: "STAIRS",
+  { 
+    q: "At Shree Krishna Heights, every visit begins with me. Welcoming everyone before homes come into sight.",
+    answer: "Main Entrance",
     clues: [
-      "Used when lift is busy",
-      "Step by step",
-      "Found in buildings"
-    ]
-  },
-
-  {
-    q: "I am full of questions but I am not curious. What am I?",
-    answer: "QUESTION PAPER",
-    clues: [
-      "Students fear me",
-      "Used in exams",
-      "Contains marks"
+      "Every resident must cross this point",
+      "Vehicles slow down near me",
+      "I am covered in Green, it's my favourite colour."
     ]
   }
 ];

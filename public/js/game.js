@@ -2,12 +2,17 @@ const id = localStorage.getItem("id");
 let qIndex = Number(localStorage.getItem("qIndex")) || 0;
 let lastGameVersion = -1;
 let lastClueVersion = -1;
+let lastGameState = "PLAYING"; // Tracks state changes for sounds
 
 // Initialize Audio Objects
-const successSound = new Audio("/sounds/success.mp3");
-const errorSound = new Audio("/sounds/error.mp3");
 const clueSound = new Audio("/sounds/clue.mp3");
+const breakSound = new Audio("/sounds/break.mp3");
+const resumeSound = new Audio("/sounds/resume.mp3");
+const finishSound = new Audio("/sounds/finish.mp3");
 
+/**
+ * Polls the server for game state, version, and clue updates
+ */
 function poll() {
     fetch("/state").then(r => r.json()).then(s => {
         const area = document.getElementById("gameArea");
@@ -21,7 +26,19 @@ function poll() {
         }
         lastGameVersion = s.gameVersion;
 
-        // 2. Handle BREAK STATE
+        // 2. State Change Sounds (Break, Resume, Finish)
+        if (s.state !== lastGameState) {
+            if (s.state === "BREAK") {
+                breakSound.play().catch(e => console.log("Audio blocked"));
+            } else if (s.state === "PLAYING" && lastGameState === "BREAK") {
+                resumeSound.play().catch(e => console.log("Audio blocked"));
+            } else if (s.state === "FINISHED") {
+                finishSound.play().catch(e => console.log("Audio blocked"));
+            }
+            lastGameState = s.state; 
+        }
+
+        // 3. Handle BREAK UI (Pause state)
         if (s.state === "BREAK") {
             area.style.display = "none";
             msgBox.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
@@ -29,7 +46,7 @@ function poll() {
             return;
         }
 
-        // 3. Handle FINISH STATE
+        // 4. Handle FINISH UI
         if (s.state === "FINISHED") {
             area.style.display = "none";
             msgBox.innerText = "🏆 CHAMPIONS! YOU FINISHED!";
@@ -37,15 +54,15 @@ function poll() {
             return;
         }
 
-        // 4. PLAYING STATE
+        // 5. PLAYING UI (Resume normal play)
         area.style.display = "block";
         msgBox.innerText = "";
 
-        // Auto-refresh clues and play sound
+        // Check for Clue Version updates to play sound and reload
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) {
-                clueSound.play().catch(e => console.log("Audio blocked by browser"));
+                clueSound.play().catch(e => console.log("Audio blocked"));
             }
             lastClueVersion = currentClueVer;
             loadQuestion();
@@ -53,13 +70,16 @@ function poll() {
     });
 }
 
+/**
+ * Loads the current question and clue list from the server
+ */
 function loadQuestion() {
     fetch(`/question/${qIndex}`).then(r => r.json()).then(d => {
         if (d.q) {
             document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
             document.getElementById("qText").innerText = d.q;
             
-            // Light up bulbs based on revealed clues
+            // Update the 3-Bulb Status visuals
             for (let i = 0; i < 3; i++) {
                 const bulb = document.getElementById(`bulb${i}`);
                 if (d.clues && d.clues[i]) {
@@ -71,7 +91,7 @@ function loadQuestion() {
                 }
             }
             
-            // Display each clue on a different line
+            // Display each revealed clue on a new line
             const clueContainer = document.getElementById("clueText");
             if (d.clues && d.clues.length > 0) {
                 clueContainer.innerHTML = d.clues.join("<br>"); 
@@ -82,9 +102,12 @@ function loadQuestion() {
     });
 }
 
+/**
+ * Handles answer submission
+ */
 function submitAnswer() {
     const inputField = document.getElementById("answerInput");
-    const word = inputField.value;
+    const word = inputField.value.trim();
     if(!word) return;
     
     fetch("/submit", {
@@ -93,20 +116,20 @@ function submitAnswer() {
         body: JSON.stringify({ id, word })
     }).then(r => r.json()).then(d => {
         if (d.ok) {
-            successSound.play().catch(e => console.log("Audio blocked"));
+            // Success logic
             qIndex++;
             localStorage.setItem("qIndex", qIndex);
             inputField.value = "";
-            lastClueVersion = -1; // Force reload for the next question
+            lastClueVersion = -1; // Force a fresh clue check for the next question
             loadQuestion();
         } else {
-            errorSound.play().catch(e => console.log("Audio blocked"));
-            alert("❌ Incorrect. Try again!");
+            // Wrong answer alert
+            alert(d.msg || "❌ Incorrect. Try again!");
         }
     });
 }
 
-// Initialization
+// Start the polling loop and initial load
 setInterval(poll, 2500);
 loadQuestion();
 poll();
