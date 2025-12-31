@@ -9,26 +9,31 @@ function updateDashboard() {
             // Update the top status text
             document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
 
-            // Generate Clue Status Table with unique IDs for bulb sync
             const clueTable = document.getElementById("clueStatusTable");
-            let clueHtml = "";
-            for (let i = 0; i < s.totalQuestions; i++) {
-                clueHtml += `
-                    <tr>
-                        <td>Question ${i + 1} (Index ${i})</td>
-                        <td style="font-size: 24px;">
-                            <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s;">💡</span>
-                            <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s;">💡</span>
-                            <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s;">💡</span>
-                            <span id="count-${i}" style="font-size: 14px; margin-left: 10px;">(0/3)</span>
-                        </td>
-                    </tr>
-                `;
-            }
-            clueTable.innerHTML = clueHtml;
             
-            // Immediately sync the bulb visuals with current server state
-            syncBulbVisuals(s.clueCount); 
+            // Fix: Only rebuild the HTML if the table is empty to prevent flicker/logic breaks
+            if (clueTable.innerHTML.trim() === "") {
+                let clueHtml = "";
+                for (let i = 0; i < s.totalQuestions; i++) {
+                    clueHtml += `
+                        <tr>
+                            <td>Question ${i + 1} (Index ${i})</td>
+                            <td style="font-size: 24px;">
+                                <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
+                                <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
+                                <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s; cursor: default;">💡</span>
+                                <span id="count-${i}" style="font-size: 14px; margin-left: 10px;">(0/3)</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+                clueTable.innerHTML = clueHtml;
+            }
+            
+            // Sync visuals using the data directly from the status call
+            if (s.clueCount) {
+                syncBulbVisuals(s.clueCount); 
+            }
         })
         .catch(err => console.error("Error fetching admin status:", err));
 
@@ -61,7 +66,7 @@ function updateDashboard() {
 }
 
 /**
- * Helper to sync bulb opacity and glow based on the clueCount array
+ * Enhanced sync helper to ensure IDs exist before styling
  */
 function syncBulbVisuals(clueCountArray) {
     clueCountArray.forEach((revealedCount, qIdx) => {
@@ -104,14 +109,14 @@ function revealClue() {
 }
 
 function restartGame() {
-    if (confirm("DANGER: This will delete ALL progress. Continue?")) {
-        fetch("/restart", { method: "POST" }).then(() => location.reload());
+    if (confirm("DANGER: This will delete ALL players and their progress. Continue?")) {
+        fetch("/restart", { method: "POST" }).then(() => {
+            document.getElementById("clueStatusTable").innerHTML = ""; // Clear table to force rebuild
+            location.reload();
+        });
     }
 }
 
-/**
- * Redirects to the export route to download CSV
- */
 function downloadCSV() {
     window.location.href = "/export";
 }
