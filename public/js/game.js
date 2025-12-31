@@ -3,25 +3,46 @@ let qIndex = Number(localStorage.getItem("qIndex")) || 0;
 let lastGameVersion = -1;
 let lastClueVersion = -1;
 let lastGameState = null; 
-let hasFinished = false; // New flag to stop the game loop
+let hasFinished = false; // Prevents the game from resetting or looping
 
+// Initialize Audio Objects - Ensure these match your actual filenames
 const clueSound = new Audio("/sounds/clue.wav");
 const breakSound = new Audio("/sounds/break.mp3");
 const resumeSound = new Audio("/sounds/resume.mp3");
 const finishSound = new Audio("/sounds/finish.wav");
 
+/**
+ * Helper to play sounds safely
+ */
 function playSound(audioObject) {
     audioObject.currentTime = 0;
     audioObject.play().catch(e => console.log("Audio blocked: Interaction required."));
 }
 
+/**
+ * Updates UI to the Finish/Trophy screen and locks the game state
+ */
+function handleFinishUI(message) {
+    if (hasFinished) return; // Only execute once
+    hasFinished = true; 
+    document.getElementById("gameArea").style.display = "none"; 
+    const msgBox = document.getElementById("msg");
+    msgBox.innerText = message;
+    msgBox.style.display = "block";
+    playSound(finishSound);
+}
+
+/**
+ * Polls the server for game state updates
+ */
 function poll() {
-    if (hasFinished) return; // Stop polling if the player is done
+    if (hasFinished) return; // Stop polling if player is already finished
 
     fetch("/state").then(r => r.json()).then(s => {
         const area = document.getElementById("gameArea");
         const msgBox = document.getElementById("msg");
 
+        // 1. Handle HARD RESET
         if (lastGameVersion !== -1 && s.gameVersion !== lastGameVersion) {
             localStorage.clear();
             location.href = "index.html";
@@ -29,26 +50,41 @@ function poll() {
         }
         lastGameVersion = s.gameVersion;
 
+        // 2. State Change Sound & UI Logic
         if (s.state !== lastGameState) {
             if (lastGameState !== null) {
-                if (s.state === "BREAK") playSound(breakSound);
-                else if (s.state === "PLAYING" && lastGameState === "BREAK") playSound(resumeSound);
-                else if (s.state === "FINISHED") {
-                    handleFinishUI("🏆 THE HUNT IS OVER!"); // Admin ended game
+                if (s.state === "BREAK") {
+                    playSound(breakSound);
+                } else if (s.state === "PLAYING" && lastGameState === "BREAK") {
+                    playSound(resumeSound);
+                } else if (s.state === "FINISHED") {
+                    // This ensures the UI develops when Admin clicks FINISH
+                    handleFinishUI("🏆 THE HUNT HAS BEEN ENDED BY ADMIN!");
+                    return;
                 }
             }
             lastGameState = s.state; 
         }
 
+        // 3. UI Logic for BREAK
         if (s.state === "BREAK") {
             area.style.display = "none";
             msgBox.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
+            msgBox.style.display = "block";
             return;
         }
 
+        // 4. UI Logic for FINISHED
+        if (s.state === "FINISHED") {
+            handleFinishUI("🏆 THE HUNT IS OVER!");
+            return;
+        }
+
+        // 5. PLAYING UI
         area.style.display = "block";
         msgBox.innerText = "";
 
+        // Clue Refreshing
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) playSound(clueSound);
@@ -58,25 +94,23 @@ function poll() {
     });
 }
 
-function handleFinishUI(message) {
-    hasFinished = true; // Lock the state
-    document.getElementById("gameArea").style.display = "none";
-    document.getElementById("msg").innerText = message;
-    playSound(finishSound);
-}
-
+/**
+ * Loads question and clue data
+ */
 function loadQuestion() {
     if (hasFinished) return;
 
     fetch(`/question/${qIndex}`).then(r => r.json()).then(d => {
         if (!d.q) {
-            handleFinishUI("🏆 CHAMPIONS! YOU FINISHED ALL QUESTIONS!");
+            // Trigger finish UI when player completes all questions
+            handleFinishUI("🏆 Congratulations! YOU FINISHED THE HUNT!");
             return;
         }
         
         document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
         document.getElementById("qText").innerText = d.q;
         
+        // Update Bulb visuals
         for (let i = 0; i < 3; i++) {
             const bulb = document.getElementById(`bulb${i}`);
             if (bulb) {
@@ -92,6 +126,9 @@ function loadQuestion() {
     });
 }
 
+/**
+ * Submits answer to server
+ */
 function submitAnswer() {
     if (hasFinished) return;
 
@@ -116,6 +153,7 @@ function submitAnswer() {
     });
 }
 
+// Start polling
 setInterval(poll, 2500);
 loadQuestion();
 poll();
