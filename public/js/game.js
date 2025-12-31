@@ -2,31 +2,26 @@ const id = localStorage.getItem("id");
 let qIndex = Number(localStorage.getItem("qIndex")) || 0;
 let lastGameVersion = -1;
 let lastClueVersion = -1;
-let lastGameState = null; // Tracks previous state to play sounds only once
+let lastGameState = null; 
+let hasFinished = false; // New flag to stop the game loop
 
-// Initialize Audio Objects - Matching your folder extensions exactly
-const clueSound = new Audio("/sounds/clue.wav"); 
+const clueSound = new Audio("/sounds/clue.wav");
 const breakSound = new Audio("/sounds/break.mp3");
 const resumeSound = new Audio("/sounds/resume.mp3");
-const finishSound = new Audio("/sounds/finish.wav"); // Matches your .wav file
+const finishSound = new Audio("/sounds/finish.wav");
 
-/**
- * Helper to play sounds safely and prevent looping
- */
 function playSound(audioObject) {
-    audioObject.currentTime = 0; 
+    audioObject.currentTime = 0;
     audioObject.play().catch(e => console.log("Audio blocked: Interaction required."));
 }
 
-/**
- * Polls server for state, version, and clue updates
- */
 function poll() {
+    if (hasFinished) return; // Stop polling if the player is done
+
     fetch("/state").then(r => r.json()).then(s => {
         const area = document.getElementById("gameArea");
         const msgBox = document.getElementById("msg");
 
-        // 1. Handle HARD RESET (Redirect if version changes)
         if (lastGameVersion !== -1 && s.gameVersion !== lastGameVersion) {
             localStorage.clear();
             location.href = "index.html";
@@ -34,33 +29,26 @@ function poll() {
         }
         lastGameVersion = s.gameVersion;
 
-        // 2. Trigger sounds on Admin State changes (Play ONCE per change)
         if (s.state !== lastGameState) {
             if (lastGameState !== null) {
                 if (s.state === "BREAK") playSound(breakSound);
                 else if (s.state === "PLAYING" && lastGameState === "BREAK") playSound(resumeSound);
-                else if (s.state === "FINISHED") playSound(finishSound); 
+                else if (s.state === "FINISHED") {
+                    handleFinishUI("🏆 THE HUNT IS OVER!"); // Admin ended game
+                }
             }
             lastGameState = s.state; 
         }
 
-        // 3. UI Logic for Game States
         if (s.state === "BREAK") {
             area.style.display = "none";
             msgBox.innerText = "⏸ GAME PAUSED - TIME IS FROZEN";
             return;
         }
 
-        if (s.state === "FINISHED") {
-            area.style.display = "none";
-            msgBox.innerText = "🏆 CHAMPIONS! YOU FINISHED!";
-            return;
-        }
-
         area.style.display = "block";
         msgBox.innerText = "";
 
-        // 4. Clue Refreshing & Sound
         const currentClueVer = s.clueVersion[qIndex] || 0;
         if (currentClueVer !== lastClueVersion) {
             if (lastClueVersion !== -1 && currentClueVer > lastClueVersion) playSound(clueSound);
@@ -70,23 +58,25 @@ function poll() {
     });
 }
 
-/**
- * Loads current question and lights up bulbs
- */
+function handleFinishUI(message) {
+    hasFinished = true; // Lock the state
+    document.getElementById("gameArea").style.display = "none";
+    document.getElementById("msg").innerText = message;
+    playSound(finishSound);
+}
+
 function loadQuestion() {
+    if (hasFinished) return;
+
     fetch(`/question/${qIndex}`).then(r => r.json()).then(d => {
-        // Handle individual completion
         if (!d.q) {
-            document.getElementById("gameArea").style.display = "none";
-            document.getElementById("msg").innerText = "🏆 ALL QUESTIONS COMPLETED!";
-            playSound(finishSound); 
+            handleFinishUI("🏆 CHAMPIONS! YOU FINISHED ALL QUESTIONS!");
             return;
         }
         
         document.getElementById("qno").innerText = `Question ${qIndex + 1}`;
         document.getElementById("qText").innerText = d.q;
         
-        // Update Bulb visuals
         for (let i = 0; i < 3; i++) {
             const bulb = document.getElementById(`bulb${i}`);
             if (bulb) {
@@ -95,7 +85,6 @@ function loadQuestion() {
             }
         }
         
-        // Display clues on new lines
         const clueContainer = document.getElementById("clueText");
         if (clueContainer) {
             clueContainer.innerHTML = d.clues ? d.clues.join("<br>") : "";
@@ -103,10 +92,9 @@ function loadQuestion() {
     });
 }
 
-/**
- * Submits answer in Uppercase
- */
 function submitAnswer() {
+    if (hasFinished) return;
+
     const inputField = document.getElementById("answerInput");
     const word = inputField.value.trim().toUpperCase(); 
     if(!word) return;
@@ -128,7 +116,6 @@ function submitAnswer() {
     });
 }
 
-// Initialization
 setInterval(poll, 2500);
 loadQuestion();
 poll();
