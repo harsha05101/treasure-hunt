@@ -104,6 +104,7 @@ app.get("/players", (req, res) => res.json(players));
 app.get("/admin/status", (req, res) => {
     res.json({ gameState, clueCount, totalQuestions: questions.length });
 });
+
 // Helper function to convert seconds to mm:ss format
 function formatTime(seconds) {
     if (!seconds && seconds !== 0) return "00:00";
