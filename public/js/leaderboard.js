@@ -1,19 +1,3 @@
-function load(){
-  fetch("/players").then(r=>r.json()).then(players=>{
-    t.innerHTML="<tr><th>Team</th><th>Q</th><th>Status</th></tr>";
-    players.forEach(p=>{
-      const r=t.insertRow();
-      r.insertCell(0).innerText=p.name;
-      r.insertCell(1).innerText=p.qIndex+1;
-      r.insertCell(2).innerText=p.end?"Finished":"Playing";
-    });
-  });
-}
-setInterval(load,3000);
-load();
-/**
- * Helper to convert seconds into mm:ss format
- */
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -25,21 +9,19 @@ function updateLeaderboard() {
         .then(r => r.json())
         .then(players => {
             const tableBody = document.getElementById("leaderboardBody");
-            
-            // 1. Calculate Total Time and Sort Players
+            if (!tableBody) return;
+
+            // Sort logic: Most questions first, then fastest time
             const ranked = [...players].map(p => {
                 const totalSeconds = p.times.reduce((a, b) => a + b, 0);
                 return { ...p, totalSeconds };
             }).sort((a, b) => {
-                // Primary Sort: Number of questions answered (Descending)
                 if (b.qIndex !== a.qIndex) return b.qIndex - a.qIndex;
-                // Secondary Sort: Fastest total time (Ascending)
                 return a.totalSeconds - b.totalSeconds;
             });
 
-            // 2. Generate Table HTML
             tableBody.innerHTML = ranked.map((p, i) => `
-                <tr class="${p.end ? 'finished-row' : ''}">
+                <tr style="${p.end ? 'background: rgba(76, 175, 80, 0.2);' : ''}">
                     <td>#${i + 1}</td>
                     <td><strong>${p.name}</strong></td>
                     <td>Question ${p.qIndex}</td>
@@ -48,9 +30,8 @@ function updateLeaderboard() {
                 </tr>
             `).join('');
         })
-        .catch(err => console.error("Error loading leaderboard:", err));
+        .catch(err => console.error("Leaderboard error:", err));
 }
 
-// Auto-refresh every 5 seconds
-setInterval(updateLeaderboard, 1000);
+setInterval(updateLeaderboard, 3000);
 updateLeaderboard();

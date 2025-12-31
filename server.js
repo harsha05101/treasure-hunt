@@ -111,6 +111,30 @@ function formatTime(seconds) {
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
+// ... existing server setup ...
+
+app.post("/submit", (req, res) => {
+    const { id, word } = req.body;
+    const p = players.find(x => x.id === id);
+    if (!p || gameState !== "PLAYING" || p.end) return res.json({ ok: false });
+
+    // Force player input to UPPERCASE and trim whitespace
+    const playerAnswer = word.trim().toUpperCase();
+    const correctAnswer = questions[p.qIndex].answer.toUpperCase();
+
+    if (playerAnswer === correctAnswer) {
+        const now = Date.now();
+        p.times.push(Math.floor((now - p.lastTime) / 1000));
+        p.lastTime = now;
+        p.qIndex++;
+        
+        if (p.qIndex >= questions.length) p.end = now;
+        return res.json({ ok: true });
+    }
+    res.json({ ok: false, msg: "Wrong Answer!" });
+});
+
+// ... rest of server code ...
 
 app.get("/export", (req, res) => {
     // 1. Calculate totals and Sort by fastest total time to determine "Place"
