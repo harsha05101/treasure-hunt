@@ -6,25 +6,30 @@ function updateDashboard() {
     fetch("/admin/status")
         .then(r => r.json())
         .then(s => {
-            // Update the top status text
             document.getElementById("statusDisplay").innerText = `Status: ${s.gameState}`;
 
-            // Update the Clue Status Table
             const clueTable = document.getElementById("clueStatusTable");
             let clueHtml = "";
             for (let i = 0; i < s.totalQuestions; i++) {
                 const revealed = s.clueCount[i] || 0;
+                
+                // We generate the HTML with specific IDs so updateAdminClueStatus can find them
                 clueHtml += `
                     <tr>
                         <td>Question ${i + 1} (Index ${i})</td>
-                        <td style="font-size: 18px;">
-                            ${"💡".repeat(revealed)}${"⚪".repeat(3 - revealed)}
-                            <span style="font-size: 12px; margin-left: 5px;">(${revealed}/3)</span>
+                        <td style="font-size: 24px;">
+                            <span id="bulb-${i}-0" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                            <span id="bulb-${i}-1" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                            <span id="bulb-${i}-2" style="opacity: 0.2; transition: 0.3s;">💡</span>
+                            <span id="count-${i}" style="font-size: 14px; margin-left: 10px;">(0/3)</span>
                         </td>
                     </tr>
                 `;
             }
             clueTable.innerHTML = clueHtml;
+            
+            // Immediately trigger the glow logic after building the table
+            updateAdminClueStatus();
         })
         .catch(err => console.error("Error fetching admin status:", err));
 
@@ -33,8 +38,13 @@ function updateDashboard() {
         .then(r => r.json())
         .then(players => {
             const playerTable = document.getElementById("playerTable");
-            // Sort players by their question progress (highest question first)
-            const sorted = [...players].sort((a, b) => b.qIndex - a.qIndex);
+            // Sort by progress, then by total time (fastest first)
+            const sorted = [...players].sort((a, b) => {
+                if (b.qIndex !== a.qIndex) return b.qIndex - a.qIndex;
+                const timeA = (a.times || []).reduce((sum, t) => sum + t, 0);
+                const timeB = (b.times || []).reduce((sum, t) => sum + t, 0);
+                return timeA - timeB;
+            });
             
             playerTable.innerHTML = sorted.map((p, i) => `
                 <tr>
@@ -49,63 +59,3 @@ function updateDashboard() {
         })
         .catch(err => console.error("Error fetching players:", err));
 }
-
-// ACTION FUNCTIONS
-function setState(state) {
-    fetch("/state", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ state }) 
-    });
-}
-
-function revealClue() {
-    const qIndexInput = document.getElementById("qIdx");
-    fetch("/reveal", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ qIndex: Number(qIndexInput.value) }) 
-    });
-}
-function updateAdminClueStatus() {
-    fetch("/state").then(r => r.json()).then(s => {
-        // Loop through every question shown on the admin panel
-        for (let qIdx = 0; qIdx < s.clueVersion.length; qIdx++) {
-            const revealedCount = s.clueVersion[qIdx];
-            
-            // Update bulbs for this specific question index
-            for (let i = 0; i < 3; i++) {
-                const bulb = document.getElementById(`bulb-${qIdx}-${i}`);
-                if (bulb) {
-                    if (i < revealedCount) {
-                        bulb.style.opacity = "1";
-                        bulb.style.filter = "drop-shadow(0 0 5px #ffeb3b)";
-                    } else {
-                        bulb.style.opacity = "0.2";
-                        bulb.style.filter = "none";
-                    }
-                }
-            }
-            
-            // Update the text counter (e.g., 1/3)
-            const countLabel = document.getElementById(`count-${qIdx}`);
-            if (countLabel) {
-                countLabel.innerText = `(${revealedCount}/3)`;
-            }
-        }
-    });
-}
-
-// Add this to your existing setInterval loop in admin.js
-setInterval(updateAdminClueStatus, 2000);
-
-function restartGame() {
-    if (confirm("DANGER: This will delete ALL players and their progress. Continue?")) {
-        fetch("/restart", { method: "POST" });
-    }
-}
-
-// Start the 3-second auto-refresh cycle
-setInterval(updateDashboard, 3000);
-// Initial load
-updateDashboard();
